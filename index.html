@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SmilePlus">
+<title>SmilePlus Dental Care Center</title>
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#fff; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+  #app { position:relative; width:100vw; height:100vh; overflow:hidden; background:#fff; }
+  .slide { position:absolute; inset:0; opacity:0; pointer-events:none;
+            transition:opacity .45s ease; display:flex; align-items:center; justify-content:center; }
+  .slide.active { opacity:1; pointer-events:auto; }
+  .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
+  .booking-hit { position:absolute; left:50%; transform:translateX(-50%);
+                  bottom:4.5%; width:46%; height:13%; min-height:70px;
+                  border:0; background:transparent; cursor:pointer; }
+  .controls { position:absolute; inset:0; pointer-events:none; }
+  .nav { position:absolute; top:50%; transform:translateY(-50%); width:54px; height:54px;
+          border:0; border-radius:50%; background:rgba(0,62,145,.25);
+          color:white; font-size:34px; line-height:54px; pointer-events:auto;
+          opacity:0; transition:opacity .2s; }
+  #app:hover .nav { opacity:.8; }
+  .prev { left:12px; } .next { right:12px; }
+  .dots { position:absolute; left:50%; bottom:10px; transform:translateX(-50%);
+           display:flex; gap:6px; pointer-events:auto; opacity:.8; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#b9c8dc; border:0; padding:0; }
+  .dot.active { background:#1269d8; width:20px; border-radius:5px; }
+  .counter { position:absolute; right:14px; bottom:9px; color:#17427e;
+              font-size:12px; font-weight:600; opacity:.7; }
+  @media (max-width:700px) {
+    .nav { display:none; }
+    .booking-hit { width:60%; height:16%; bottom:4%; }
+  }
+</style>
+</head>
+<body>
+<div id="app" aria-label="SmilePlus Dental Care Center slideshow">
+  <section class="slide active" data-index="0"><img src="assets/01-braces-promo.png" alt="SmilePlus slide 1"></section>
+  <section class="slide" data-index="1"><img src="assets/02-branches-services.png" alt="SmilePlus slide 2"></section>
+  <section class="slide" data-index="2"><img src="assets/03-general-dentistry.png" alt="SmilePlus slide 3"></section>
+  <section class="slide" data-index="3"><img src="assets/04-oral-surgery.png" alt="SmilePlus slide 4"></section>
+  <section class="slide" data-index="4"><img src="assets/05-esthetic-dentistry.png" alt="SmilePlus slide 5"></section>
+  <section class="slide" data-index="5"><img src="assets/06-teeth-whitening.png" alt="SmilePlus slide 6"></section>
+  <section class="slide" data-index="6"><img src="assets/07-orthodontics.png" alt="SmilePlus slide 7"></section>
+  <section class="slide" data-index="7"><img src="assets/08-panoramic-xray.png" alt="SmilePlus slide 8"></section>
+  <section class="slide" data-index="8"><img src="assets/09-tap-to-register.png" alt="SmilePlus slide 9"></section>
+
+  <button class="booking-hit" id="booking" aria-label="Tap to Register"></button>
+  <div class="controls">
+    <button class="nav prev" aria-label="Previous slide">‹</button>
+    <button class="nav next" aria-label="Next slide">›</button>
+    <div class="dots" id="dots"></div>
+    <div class="counter" id="counter"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const dots = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const app = document.getElementById('app');
+  const booking = document.getElementById('booking');
+  let index = 0;
+  let timer = null;
+  const BOOKING_URL = "https://dental.m.mymedsph.app/dental/mJKUmCGB3";
+
+  slides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.className = 'dot' + (i === 0 ? ' active' : '');
+    b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    b.onclick = () => go(i);
+    dots.appendChild(b);
+  });
+
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === index));
+    [...dots.children].forEach((d, i) => d.classList.toggle('active', i === index));
+    counter.textContent = (index + 1) + ' / ' + slides.length;
+  }
+
+  function go(i) {
+    index = (i + slides.length) % slides.length;
+    render();
+    restart();
+  }
+
+  function next() { go(index + 1); }
+  function prev() { go(index - 1); }
+
+  document.querySelector('.next').onclick = next;
+  document.querySelector('.prev').onclick = prev;
+
+  // The Tap to Register button is on the final uploaded slide.
+  booking.onclick = () => {
+    if (index !== slides.length - 1) return;
+    // Open booking in a separate tab so the SmilePlus slideshow remains available.
+    window.open(BOOKING_URL, '_blank', 'noopener');
+  };
+
+  // Swipe navigation for iPad.
+  let startX = null, startY = null;
+  app.addEventListener('touchstart', e => {
+    const t = e.changedTouches[0];
+    startX = t.clientX; startY = t.clientY;
+  }, {passive:true});
+  app.addEventListener('touchend', e => {
+    if (startX === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    startX = startY = null;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+      dx < 0 ? next() : prev();
+    }
+  }, {passive:true});
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  function restart() {
+    clearInterval(timer);
+    timer = setInterval(next, 7000);
+  }
+
+  render();
+  restart();
+})();
+</script>
+</body>
+</html>
