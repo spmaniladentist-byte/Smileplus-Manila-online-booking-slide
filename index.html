@@ -16,9 +16,8 @@
             transition:opacity .45s ease; display:flex; align-items:center; justify-content:center; }
   .slide.active { opacity:1; pointer-events:auto; }
   .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
-  .booking-hit { position:absolute; left:50%; transform:translateX(-50%);
-                  bottom:4.5%; width:46%; height:13%; min-height:70px;
-                  border:0; background:transparent; cursor:pointer; }
+  /* Every slide is tappable for instant MyMedsPH booking. */
+  .booking-hit { display:none; }
   .controls { position:absolute; inset:0; pointer-events:none; }
   .nav { position:absolute; top:50%; transform:translateY(-50%); width:54px; height:54px;
           border:0; border-radius:50%; background:rgba(0,62,145,.25);
@@ -34,7 +33,6 @@
               font-size:12px; font-weight:600; opacity:.7; }
   @media (max-width:700px) {
     .nav { display:none; }
-    .booking-hit { width:60%; height:16%; bottom:4%; }
   }
 </style>
 </head>
@@ -65,7 +63,6 @@
   const dots = document.getElementById('dots');
   const counter = document.getElementById('counter');
   const app = document.getElementById('app');
-  const booking = document.getElementById('booking');
   let index = 0;
   let timer = null;
   const BOOKING_URL = "https://dental.m.mymedsph.app/dental/mJKUmCGB3";
@@ -96,27 +93,45 @@
   document.querySelector('.next').onclick = next;
   document.querySelector('.prev').onclick = prev;
 
-  // The Tap to Register button is on the final uploaded slide.
-  booking.onclick = () => {
-    if (index !== slides.length - 1) return;
-    // Open booking in a separate tab so the SmilePlus slideshow remains available.
+  // Any tap/click on a slide opens the stable MyMedsPH booking page.
+  function openBooking() {
     window.open(BOOKING_URL, '_blank', 'noopener');
-  };
+  }
 
-  // Swipe navigation for iPad.
-  let startX = null, startY = null;
+  // Keep navigation controls usable; tapping the actual slide opens booking.
+  app.addEventListener('click', e => {
+    if (e.target.closest('.nav, .dots, .dot')) return;
+    if (e.target.closest('.slide')) openBooking();
+  });
+
+  // iPad: a simple tap opens booking; a horizontal swipe changes slides.
+  let startX = null, startY = null, didSwipe = false;
   app.addEventListener('touchstart', e => {
     const t = e.changedTouches[0];
-    startX = t.clientX; startY = t.clientY;
+    startX = t.clientX; startY = t.clientY; didSwipe = false;
+  }, {passive:true});
+  app.addEventListener('touchmove', e => {
+    if (startX === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy)) didSwipe = true;
   }, {passive:true});
   app.addEventListener('touchend', e => {
     if (startX === null) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - startX, dy = t.clientY - startY;
+    const wasSwipe = Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy);
     startX = startY = null;
-    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+    if (wasSwipe) {
+      didSwipe = true;
       dx < 0 ? next() : prev();
+      return;
     }
+    // For a clean tap on a slide, open booking immediately.
+    if (!e.target.closest('.nav, .dots, .dot') && e.target.closest('.slide')) {
+      openBooking();
+    }
+    didSwipe = false;
   }, {passive:true});
 
   document.addEventListener('keydown', e => {
