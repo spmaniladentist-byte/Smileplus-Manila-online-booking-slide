@@ -13,9 +13,22 @@
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
   #app { position:relative; width:100vw; height:100vh; overflow:hidden; background:#fff; }
   .slide { position:absolute; inset:0; opacity:0; pointer-events:none;
-            transition:opacity .45s ease; display:flex; align-items:center; justify-content:center; }
-  .slide.active { opacity:1; pointer-events:auto; }
-  .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
+            transform:scale(1.025);
+            transition:opacity .7s ease, transform .9s cubic-bezier(.22,.61,.36,1);
+            display:flex; align-items:center; justify-content:center; }
+  .slide.active { opacity:1; pointer-events:auto; transform:scale(1); }
+  .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff;
+               animation:none; transform-origin:center center; }
+  .slide.active img { animation: kenBurns 7s ease-in-out both; }
+  @keyframes kenBurns {
+    0% { transform:scale(1); opacity:.72; }
+    12% { opacity:1; }
+    100% { transform:scale(1.035); opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .slide.active { transition:opacity .2s ease; transform:none; }
+    .slide.active img { animation:none; }
+  }
   /* Every slide is tappable for instant MyMedsPH booking. */
   .booking-hit { display:none; }
   .controls { position:absolute; inset:0; pointer-events:none; }
@@ -76,7 +89,16 @@
   });
 
   function render() {
-    slides.forEach((s, i) => s.classList.toggle('active', i === index));
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === index);
+      // Restart the entrance animation each time a slide becomes active.
+      if (i === index) {
+        const img = s.querySelector('img');
+        img.style.animation = 'none';
+        void img.offsetWidth;
+        img.style.animation = '';
+      }
+    });
     [...dots.children].forEach((d, i) => d.classList.toggle('active', i === index));
     counter.textContent = (index + 1) + ' / ' + slides.length;
   }
