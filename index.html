@@ -11,23 +11,18 @@
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#fff; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+  /* Optimized for iPad 11th gen landscape (2360x1640 / 59:41).
+     Artwork stays fully visible with no cropping. */
   #app { position:relative; width:100vw; height:100vh; overflow:hidden; background:#fff; }
   .slide { position:absolute; inset:0; opacity:0; pointer-events:none;
-            transform:scale(1.025);
-            transition:opacity .7s ease, transform .9s cubic-bezier(.22,.61,.36,1);
-            display:flex; align-items:center; justify-content:center; }
-  .slide.active { opacity:1; pointer-events:auto; transform:scale(1); }
-  .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff;
-               animation:none; transform-origin:center center; }
-  .slide.active img { animation: kenBurns 7s ease-in-out both; }
-  @keyframes kenBurns {
-    0% { transform:scale(1); opacity:.72; }
-    12% { opacity:1; }
-    100% { transform:scale(1.035); opacity:1; }
-  }
+            transform:translateX(100%);
+            transition:transform .65s cubic-bezier(.22,.61,.36,1), opacity .65s ease;
+            display:flex; align-items:center; justify-content:center;
+            will-change:transform,opacity; }
+  .slide.active { opacity:1; pointer-events:auto; transform:translateX(0); z-index:2; }
+  .slide img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
   @media (prefers-reduced-motion: reduce) {
     .slide, .slide.active { transition:opacity .2s ease; transform:none; }
-    .slide.active img { animation:none; }
   }
   /* Every slide is tappable for instant MyMedsPH booking. */
   .booking-hit { display:none; }
@@ -163,7 +158,7 @@
 
   function restart() {
     clearInterval(timer);
-    timer = setInterval(next, 7000);
+    timer = setInterval(next, 5000);
   }
 
   render();
