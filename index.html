@@ -46,7 +46,8 @@
   <section class="slide" data-index="5"><img src="assets/06-teeth-whitening.png" alt="SmilePlus slide 6"></section>
   <section class="slide" data-index="6"><img src="assets/07-orthodontics.png" alt="SmilePlus slide 7"></section>
   <section class="slide" data-index="7"><img src="assets/08-panoramic-xray.png" alt="SmilePlus slide 8"></section>
-  <section class="slide" data-index="8"><img src="assets/09-tap-to-register.png" alt="SmilePlus slide 9"></section>
+  <section class="slide" data-index="8"><img src="assets/09-dental-crowns.png" alt="SmilePlus Dental Crowns — 7-Unit Fix Bridge"></section>
+  <section class="slide" data-index="9"><img src="assets/09-tap-to-register.png" alt="SmilePlus slide 10"></section>
 
   <div class="controls">
     <button class="nav prev" type="button" aria-label="Previous slide">‹</button>
@@ -64,7 +65,7 @@
   const app=document.getElementById('app');
   let index=0,timer=null,startX=null,startY=null;
   const BOOKING_URL="https://dental.m.mymedsph.app/dental/mJKUmCGB3";
-  const INTERVAL=5000;
+  const INTERVAL=8000;
 
   slides.forEach((_,i)=>{
     const b=document.createElement('button');
@@ -83,8 +84,21 @@
   function go(i){index=(i+slides.length)%slides.length;render();restart()}
   function next(){go(index+1)}
   function prev(){go(index-1)}
-  function restart(){clearInterval(timer);timer=setInterval(next,INTERVAL)}
+  function stopTimer(){clearInterval(timer);timer=null}
+  function startTimer(){
+    stopTimer();
+    if(!document.hidden) timer=setInterval(next,INTERVAL);
+  }
+  function restart(){startTimer()}
   function openBooking(){window.open(BOOKING_URL,'_blank','noopener')}
+
+  // Save battery: pause the slideshow timer when Safari hides/backgrounds the page.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden) stopTimer();
+    else startTimer();
+  });
+  window.addEventListener('pagehide',stopTimer);
+  window.addEventListener('pageshow',startTimer);
 
   document.querySelector('.next').addEventListener('click',e=>{e.stopPropagation();next()});
   document.querySelector('.prev').addEventListener('click',e=>{e.stopPropagation();prev()});
